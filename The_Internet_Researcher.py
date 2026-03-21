@@ -26,7 +26,7 @@ if "report" not in st.session_state:
     st.session_state.report=None
 
 def web_search(state: State):
-    tavil=TavilyClient(api_key="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")
+    tavil=TavilyClient(api_key="TAVIL_API_KEY")
     response=tavil.search(state['query'])
     return {'web_result': response['results']}
 
