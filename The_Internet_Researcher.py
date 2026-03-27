@@ -179,6 +179,3 @@ if st.session_state.report:
             final_content = response["messages"][-1].content
             st.markdown(final_content)
             st.session_state.messages.append({"role":"assistant","content":final_content})
-
-else:
-st.warning("Please provide the Google API KEY")
