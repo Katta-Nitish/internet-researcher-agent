@@ -3,7 +3,7 @@ from tavily import TavilyClient
 import streamlit as st
 from langchain.agents import create_agent
 from langchain.messages import HumanMessage
-from langchain_ollama import OllamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_google_genai import ChatGoogleGenerativeAI
 from typing import List, TypedDict
@@ -34,7 +34,15 @@ if user_key:
         return {'web_result': response['results']}
 
     def embed(state: State):
-        embedding=OllamaEmbeddings(model="nomic-embed-text")
+        model_name = "BAAI/bge-small-en-v1.5"
+        model_kwargs = {'device': 'cpu'}
+        encode_kwargs = {'normalize_embeddings': True}
+        
+        embedding = HuggingFaceEmbeddings(
+            model_name=model_name,
+            model_kwargs=model_kwargs,
+            encode_kwargs=encode_kwargs
+        )
         texts = [res['content'] for res in state['web_result']]
         metadatas = [{"source": res['url']} for res in state['web_result']]
         vectorstore = Chroma.from_texts(texts, embedding, metadatas=metadatas)
