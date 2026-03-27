@@ -1,4 +1,3 @@
-from datetime import datetime
 import sys
 try:
     __import__('pysqlite3')
@@ -73,7 +72,6 @@ if user_key:
         return {"embedding": formatted_report_input}
 
     def final_output(state: State):
-        current_date = datetime.now().strftime("%B %d, %Y")
         llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=user_key, temperature=0.2)
         prompt = (
             f"RESEARCH DATA:\n{state['embedding']}\n\n"
@@ -81,7 +79,7 @@ if user_key:
             f"INSTRUCTIONS:\n"
             f"1. Use the Research Data provided to write the report.\n"
             f"2. At the very end of the report, add a section titled '--- SOURCES ---' and list all unique URLs used.\n"
-            f"3. After the sources, add a final line: 'Report Generated on: {current_date}'."
+            f"3. After the sources, add a final line: 'Report Generated on: Today's Date.(Replace Tpdats date with actual date)'\n"
         )
         response=llm.invoke(prompt)
         return {'final': response.content}
@@ -101,7 +99,7 @@ if user_key:
         return builder.compile(checkpointer=st.session_state.agent_memory)
     research=get_graph()
 
-    user_input=st.text_input("Enter your research topic")
+    user_input=st.text_input("What would you like me to research?", key="research_topic")
     if st.button("Start Research💡"):
         initial_messagge={"query":user_input}
         with st.status("Researcher is running...", expanded=True) as status:
@@ -137,6 +135,14 @@ if user_key:
                     del st.session_state[key]
                 st.rerun()
         st.write(st.session_state.report)
+        file_name = f"Research_Report_{user_input.replace(' ', '_')}.md"
+        st.download_button(
+            label="📥 Download Report as Markdown",
+            data=st.session_state.report,
+            file_name=file_name,
+            mime="text/markdown",
+            help="Click to save this report to your computer."
+        )   
 
 
     agent=create_agent(
