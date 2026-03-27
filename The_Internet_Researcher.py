@@ -16,7 +16,7 @@ class State(TypedDict):
     final: str
 @st.cache_resource
 def image():
-    return st.image("D:\\The_Internet_Researcher\\i1.png", width=200)
+    return st.image("i1.png", width=200)
 st.title("The Internet Researcher")
 image()
 if "agent_memory" not in st.session_state:
