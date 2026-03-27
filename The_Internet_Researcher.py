@@ -1,8 +1,16 @@
+import sys
+try:
+    __import__('pysqlite3')
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass
+
 from langchain_community.vectorstores import Chroma
 from tavily import TavilyClient
 import streamlit as st
 from langchain.agents import create_agent
 from langchain.messages import HumanMessage
+from datetime import datetime
 from langchain_huggingface import HuggingFaceEmbeddings
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -54,6 +62,7 @@ if user_key:
         return {"embedding": formatted_report_input}
 
     def final_output(state: State):
+        current_date = datetime.now().strftime("%B %d, %Y")
         llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=user_key, temperature=0.2)
         prompt = (
             f"RESEARCH DATA:\n{state['embedding']}\n\n"
