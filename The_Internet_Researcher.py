@@ -74,7 +74,7 @@ def embed(state: State):
 def final_output(state: State):
     api_key = st.session_state.get("user_key")
     today_date = datetime.now().strftime("%B %d, %Y")
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", google_api_key=api_key, temperature=0.2)
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key, temperature=0.2)
     prompt = (
         f"RESEARCH DATA:\n{state['embedding']}\n\n"
         f"TASK: Draft a comprehensive report on: {state['query']}.\n\n"
@@ -147,7 +147,7 @@ if st.session_state.user_key:
 
     api_key = st.session_state.get("user_key")
     agent=create_agent(
-        model=ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", google_api_key=api_key, temperature=0.2),
+        model=ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key, temperature=0.2),
         checkpointer=st.session_state.agent_memory,
         system_prompt=f'''You are an Expert Research Assistant. 
 
