@@ -145,7 +145,7 @@ if st.session_state.user_key:
 
 
     agent=create_agent(
-        model=ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=user_key, temperature=0.2),
+        model=ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=st.session_state.user_key, temperature=0.2),
         checkpointer=st.session_state.agent_memory,
         system_prompt=f'''You are an Expert Research Assistant. 
 
