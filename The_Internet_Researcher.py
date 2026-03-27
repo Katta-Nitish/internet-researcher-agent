@@ -45,46 +45,46 @@ with st.sidebar:
     st.caption("Get your free Gemini API key [here](https://aistudio.google.com/app/apikey).")
 
 
+
+def web_search(state: State):
+    tavil = TavilyClient(api_key=st.secrets["TAVILY_API_KEY"])
+    response=tavil.search(state['query'])
+    return {'web_result': response['results']}
+
+def embed(state: State):
+    model_name = "BAAI/bge-small-en-v1.5"
+    model_kwargs = {'device': 'cpu'}
+    encode_kwargs = {'normalize_embeddings': True}
+    
+    embedding = HuggingFaceEmbeddings(
+        model_name=model_name,
+        model_kwargs=model_kwargs,
+        encode_kwargs=encode_kwargs
+    )
+    texts = [res['content'] for res in state['web_result']]
+    metadatas = [{"source": res['url']} for res in state['web_result']]
+    vectorstore = Chroma.from_texts(texts, embedding, metadatas=metadatas)
+    relevant_docs = vectorstore.similarity_search(state['query'], k=5)
+    formatted_report_input = ""
+    for doc in relevant_docs:
+        source_url = doc.metadata.get("source", "Unknown Source")
+        formatted_report_input += f"CONTENT: {doc.page_content}\nSOURCE URL: {source_url}\n\n"
+    return {"embedding": formatted_report_input}
+
+def final_output(state: State):
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=user_key, temperature=0.2)
+    prompt = (
+        f"RESEARCH DATA:\n{state['embedding']}\n\n"
+        f"TASK: Draft a comprehensive report on: {state['query']}.\n\n"
+        f"INSTRUCTIONS:\n"
+        f"1. Use the Research Data provided to write the report.\n"
+        f"2. At the very end of the report, add a section titled '--- SOURCES ---' and list all unique URLs used.\n"
+        f"3. After the sources, add a final line: 'Report Generated on: Today's Date.(Replace Tpdats date with actual date)'\n"
+    )
+    response=llm.invoke(prompt)
+    return {'final': response.content}
+
 if user_key:
-    def web_search(state: State):
-        tavil = TavilyClient(api_key=st.secrets["TAVILY_API_KEY"])
-        response=tavil.search(state['query'])
-        return {'web_result': response['results']}
-
-    def embed(state: State):
-        model_name = "BAAI/bge-small-en-v1.5"
-        model_kwargs = {'device': 'cpu'}
-        encode_kwargs = {'normalize_embeddings': True}
-        
-        embedding = HuggingFaceEmbeddings(
-            model_name=model_name,
-            model_kwargs=model_kwargs,
-            encode_kwargs=encode_kwargs
-        )
-        texts = [res['content'] for res in state['web_result']]
-        metadatas = [{"source": res['url']} for res in state['web_result']]
-        vectorstore = Chroma.from_texts(texts, embedding, metadatas=metadatas)
-        relevant_docs = vectorstore.similarity_search(state['query'], k=5)
-        formatted_report_input = ""
-        for doc in relevant_docs:
-            source_url = doc.metadata.get("source", "Unknown Source")
-            formatted_report_input += f"CONTENT: {doc.page_content}\nSOURCE URL: {source_url}\n\n"
-        return {"embedding": formatted_report_input}
-
-    def final_output(state: State):
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=user_key, temperature=0.2)
-        prompt = (
-            f"RESEARCH DATA:\n{state['embedding']}\n\n"
-            f"TASK: Draft a comprehensive report on: {state['query']}.\n\n"
-            f"INSTRUCTIONS:\n"
-            f"1. Use the Research Data provided to write the report.\n"
-            f"2. At the very end of the report, add a section titled '--- SOURCES ---' and list all unique URLs used.\n"
-            f"3. After the sources, add a final line: 'Report Generated on: Today's Date.(Replace Tpdats date with actual date)'\n"
-        )
-        response=llm.invoke(prompt)
-        return {'final': response.content}
-
-
     @st.cache_resource
     def get_graph():
         builder=StateGraph(State)
