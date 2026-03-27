@@ -29,7 +29,7 @@ with st.sidebar:
     st.caption("Get your free Gemini API key [here](https://aistudio.google.com/app/apikey).")
 if user_key:
     def web_search(state: State):
-        tavil=TavilyClient(api_key="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")
+        tavil = TavilyClient(api_key=st.secrets["TAVILY_API_KEY"])
         response=tavil.search(state['query'])
         return {'web_result': response['results']}
 
