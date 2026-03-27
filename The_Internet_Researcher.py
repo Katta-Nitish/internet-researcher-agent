@@ -7,6 +7,7 @@ except ImportError:
     pass
 
 from langchain_community.vectorstores import Chroma
+import uuid
 from tavily import TavilyClient
 import streamlit as st
 from langchain.agents import create_agent
@@ -16,7 +17,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langchain_google_genai import ChatGoogleGenerativeAI
 from typing import List, TypedDict
 from langgraph.graph import StateGraph, START,END
-thread_config = {"configurable": {"thread_id": "Session_1"}}
+
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+
+thread_config = {"configurable": {"thread_id": st.session_state.session_id}}
 class State(TypedDict):
     query: str
     web_result: List[dict]
@@ -25,8 +30,12 @@ class State(TypedDict):
 @st.cache_resource
 def image():
     return st.image("i1.png", width=200)
-st.title("The Internet Researcher")
-image()
+st.set_page_config(page_title="The Internet Researcher", page_icon="🔍")
+try:
+    image()
+except:
+    pass
+
 if "agent_memory" not in st.session_state:
     st.session_state.agent_memory=InMemorySaver()
 if "report" not in st.session_state:
@@ -35,6 +44,8 @@ with st.sidebar:
     st.title("⚙️ Configuration")
     user_key = st.text_input("Enter Gemini API Key", type="password")
     st.caption("Get your free Gemini API key [here](https://aistudio.google.com/app/apikey).")
+
+
 if user_key:
     def web_search(state: State):
         tavil = TavilyClient(api_key=st.secrets["TAVILY_API_KEY"])
@@ -119,7 +130,14 @@ if user_key:
                     )
             else:
                 st.write("No research data in memory. Start a search to populate.")
+            st.divider()
+            if st.button("🧹 Clear Session & New Research"):
+                # This deletes all data for the CURRENT user only
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                st.rerun()
         st.write(st.session_state.report)
+
 
     agent=create_agent(
         model=ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=user_key, temperature=0.2),
